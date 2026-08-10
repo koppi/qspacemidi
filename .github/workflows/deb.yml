@@ -9,10 +9,16 @@ name: debian packages
 # jammy has CMake 3.22 and GCC 11, bullseye has no Qt 6 at all.  Use the
 # AppImage from the release page there.
 
+# Ten QEMU builds are expensive, so branch pushes do not trigger them: the
+# matrix runs for tags, for pull requests that touch the build, and on
+# demand.  A paths filter must not be combined with the tag trigger here -
+# a tag push has no changed files to match against, and the workflow would
+# silently never run.
 on:
   push:
-    branches: [main, master]
     tags: ["v*"]
+  pull_request:
+    branches: [main, master]
     paths:
       - "CMakeLists.txt"
       - "src/**"
@@ -21,8 +27,6 @@ on:
       - "packaging/**"
       - "debian/**"
       - ".github/workflows/deb.yml"
-  pull_request:
-    branches: [main, master]
   workflow_dispatch:
 
 permissions:

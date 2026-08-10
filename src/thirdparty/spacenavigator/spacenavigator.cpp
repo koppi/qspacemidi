@@ -36,6 +36,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/hid/IOHIDManager.h>
 #include <IOKit/hid/IOHIDUsageTables.h>
+#include <vector>
 #endif
 
 #if defined(Q_OS_WIN)
@@ -581,13 +582,17 @@ bool SpaceNavigator::openAuto()
   m_platform->manager = manager;
   m_platform->path = QStringLiteral("3Dconnexion 3D mouse");
 
-  CFArrayRef devices = IOHIDManagerCopyDevices(manager);
+  // IOHIDManagerCopyDevices() hands out a CFSet, not a CFArray.
+  CFSetRef devices = IOHIDManagerCopyDevices(manager);
   if (devices)
   {
-    if (CFArrayGetCount(devices) > 0)
+    const CFIndex count = CFSetGetCount(devices);
+    if (count > 0)
     {
+      std::vector<const void *> values(static_cast<size_t>(count), nullptr);
+      CFSetGetValues(devices, values.data());
       IOHIDDeviceRef device =
-          static_cast<IOHIDDeviceRef>(const_cast<void *>(CFArrayGetValueAtIndex(devices, 0)));
+          static_cast<IOHIDDeviceRef>(const_cast<void *>(values[0]));
       CFTypeRef product = IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductKey));
       if (product && CFGetTypeID(product) == CFStringGetTypeID())
       {
