@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=QSpaceMIDI
+GenericName=3D Mouse MIDI Controller
+Comment=Map a 3Dconnexion SpaceNavigator to MIDI CC messages
+Exec=qspacemidi
+Icon=qspacemidi
+Terminal=false
+Categories=AudioVideo;Audio;Midi;
+Keywords=MIDI;SpaceNavigator;3Dconnexion;Renoise;Controller;
+StartupNotify=true

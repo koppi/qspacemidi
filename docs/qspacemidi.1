@@ -1,0 +1,101 @@
+'\" t
+.TH QSPACEMIDI 1 "August 2026" "qspacemidi 1.0.0" "User Commands"
+.SH NAME
+qspacemidi \- map a 3Dconnexion SpaceNavigator to MIDI CC messages
+.SH SYNOPSIS
+.B qspacemidi
+.RI [ options ]
+.SH DESCRIPTION
+.B QSpaceMIDI
+turns the six degrees of freedom and the two buttons of a 3Dconnexion
+SpaceNavigator 3D mouse into MIDI control change messages, so that the device
+can drive parameters in Renoise or any other MIDI host.
+.PP
+The device is read directly from
+.IR /dev/input/event* ,
+so no proprietary 3DxWare driver is required.  A virtual ALSA sequencer port
+named
+.B QSpaceMIDI
+is published for the host to connect to; an existing output port can be
+selected instead.
+.PP
+Every axis has its own control change number, value mode and sensitivity.  A
+global dead zone suppresses the resting jitter of the cap, and the axis lock
+transmits only the axis that is deflected the most, which keeps parameters
+from bleeding into each other while MIDI mapping in the host.
+.SH OPTIONS
+.TP
+.BR \-m ", " \-\-minimized
+Start hidden in the system tray.  The mapping is active even while the window
+is not shown.
+.TP
+.BI \-\-screenshot " file"
+Render the window to
+.I file
+and exit.  Used to generate the documentation screenshot.
+.TP
+.BR \-h ", " \-\-help
+Show a summary of the options.
+.TP
+.BR \-v ", " \-\-version
+Show the version and exit.
+.SH DEFAULT MAPPING
+.TS
+tab(:);
+l l l.
+Axis:Direction:CC
+_
+X:left / right:1
+Y:forward / backward:7
+Z:up / down:74
+RX:tilt left / right:10
+RY:tilt forward / backward:71
+RZ:rotate:91
+Button 1:press:80
+Button 2:press:81
+.TE
+.SH CC MODES
+.TP
+.B Absolute
+The deflection itself, 0 to 127 with 64 at the centre.
+.TP
+.B Relative (Bin Offset)
+64 means no change, 65 to 127 counts up, 63 to 1 counts down.
+.TP
+.B Relative (2's Comp)
+1 to 63 counts up, 127 down to 65 counts down.
+.TP
+.B Relative (Signed Bit)
+65 to 127 counts up, 1 to 63 counts down.
+.SH ENVIRONMENT
+.TP
+.B QSPACEMIDI_LANG
+Language code overriding the system locale for one run, for example
+.IR ja ", " de " or " zh_CN .
+The interface ships in Danish, English, Finnish, French, German, Italian,
+Japanese, Russian and Simplified Chinese.
+.SH FILES
+.TP
+.I ~/.config/koppi/QSpaceMIDI.conf
+Configuration, written through QSettings whenever a setting changes.
+.TP
+.I ~/.config/autostart/qspacemidi.desktop
+Written and removed by the
+.B Start at login
+checkbox; starts the program minimised to the system tray.
+.TP
+.I /usr/lib/udev/rules.d/99-spacenavigator.rules
+udev rules that make the 3D mouse readable without root privileges.
+.SH NOTES
+Right click a row in the window to mute an axis or to reset its sensitivity;
+the
+.B \(+-
+button at the end of a row inverts its direction.
+.SH SEE ALSO
+.BR aconnect (1),
+.BR aseqdump (1)
+.SH AUTHOR
+Jakob Flierl <jakob.flierl@gmail.com>
+.SH COPYRIGHT
+Copyright \(co 2013-2026 Jakob Flierl.  Licensed under the GNU Lesser General
+Public License, version 2.1 or later.

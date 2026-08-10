@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  qspacemidi application icon
+
+  Copyright (C) 2026 Jakob Flierl <jakob.flierl@gmail.com>
+  Licensed under the GNU Lesser General Public License, version 2.1 or later.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#454c55"/>
+      <stop offset="1" stop-color="#1f2329"/>
+    </linearGradient>
+    <linearGradient id="cap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b6e56d"/>
+      <stop offset="0.45" stop-color="#86cc2f"/>
+      <stop offset="0.55" stop-color="#6fbd1c"/>
+      <stop offset="1" stop-color="#4d8f13"/>
+    </linearGradient>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8d949d"/>
+      <stop offset="1" stop-color="#5a6068"/>
+    </linearGradient>
+    <radialGradient id="gloss" cx="0.5" cy="0.28" r="0.6">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="8" y="8" width="240" height="240" rx="52" ry="52" fill="url(#bg)"/>
+
+  <!-- MIDI DIN ring with its five pins -->
+  <circle cx="128" cy="128" r="92" fill="none" stroke="#ffffff" stroke-opacity="0.22"
+          stroke-width="10"/>
+  <g fill="#ffffff" fill-opacity="0.8">
+    <circle cx="128" cy="52" r="11"/>
+    <circle cx="74" cy="76" r="11"/>
+    <circle cx="182" cy="76" r="11"/>
+    <circle cx="58" cy="128" r="11"/>
+    <circle cx="198" cy="128" r="11"/>
+  </g>
+
+  <!-- SpaceNavigator: weighted base and green cap -->
+  <ellipse cx="128" cy="196" rx="76" ry="26" fill="url(#base)"/>
+  <rect x="52" y="170" width="152" height="26" fill="url(#base)"/>
+  <ellipse cx="128" cy="170" rx="76" ry="26" fill="#6f757e"/>
+  <ellipse cx="128" cy="146" rx="52" ry="20" fill="url(#cap)"/>
+  <rect x="76" y="128" width="104" height="18" fill="url(#cap)"/>
+  <ellipse cx="128" cy="128" rx="52" ry="20" fill="url(#cap)"/>
+  <ellipse cx="128" cy="124" rx="40" ry="14" fill="url(#gloss)"/>
+</svg>

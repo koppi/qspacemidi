@@ -1,0 +1,37 @@
+Source: qspacemidi
+Section: sound
+Priority: optional
+Maintainer: Jakob Flierl <jakob.flierl@gmail.com>
+Build-Depends: debhelper-compat (= 13),
+               ca-certificates,
+               cmake (>= 3.24),
+               git,
+               libasound2-dev,
+               libgl-dev,
+               libudev-dev,
+               qt6-base-dev (>= 6.4),
+               qt6-base-dev-tools,
+               qt6-l10n-tools
+Standards-Version: 4.7.0
+Homepage: https://github.com/koppi/qspacemidi
+Vcs-Git: https://github.com/koppi/qspacemidi.git
+Vcs-Browser: https://github.com/koppi/qspacemidi
+Rules-Requires-Root: no
+
+Package: qspacemidi
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Suggests: renoise
+Description: 3Dconnexion SpaceNavigator to MIDI CC bridge
+ QSpaceMIDI maps the six axes and the two buttons of a 3Dconnexion
+ SpaceNavigator 3D mouse to MIDI control change messages, turning it into a
+ six dimensional controller for Renoise or any other MIDI host.
+ .
+ Each degree of freedom has its own CC number, value mode - absolute or one of
+ three relative encodings - and sensitivity.  A dead zone filters the resting
+ jitter of the cap, and an axis lock transmits only the axis that is deflected
+ the most, so that parameters do not bleed into each other while MIDI mapping.
+ .
+ The device is read directly through evdev, so no proprietary 3DxWare driver is
+ needed.  A virtual ALSA sequencer port called QSpaceMIDI is published for the
+ host to connect to.

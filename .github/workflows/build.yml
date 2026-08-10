@@ -1,0 +1,185 @@
+name: build
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  # ---------------------------------------------------------------------
+  # Portable Linux build: an AppImage that carries its own Qt, so it also
+  # runs on distributions whose Qt is older than 6.4.  The distribution
+  # packages are built separately, see deb.yml.
+  # ---------------------------------------------------------------------
+  appimage:
+    name: Linux AppImage
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build file desktop-file-utils \
+            libgl1-mesa-dev libasound2-dev libudev-dev \
+            libxkbcommon-dev libxkbcommon-x11-dev libvulkan-dev \
+            libfontconfig1-dev libfreetype6-dev libx11-xcb-dev \
+            libxcb-cursor-dev libxcb-icccm4-dev libxcb-image0-dev \
+            libxcb-keysyms1-dev libxcb-randr0-dev libxcb-render-util0-dev \
+            libxcb-shape0-dev libxcb-sync-dev libxcb-xfixes0-dev \
+            libxcb-xinerama0-dev libxcb-xkb-dev
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.*"
+          cache: true
+
+      - name: Configure and build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+          cmake --build build --parallel
+
+      - name: Package
+        run: |
+          export APPIMAGE_EXTRACT_AND_RUN=1
+          DESTDIR="$PWD/AppDir" cmake --install build --prefix /usr
+          curl -fsSLO https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          curl -fsSLO https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy-*.AppImage
+          export QMAKE="$QT_ROOT_DIR/bin/qmake"
+          export OUTPUT="QSpaceMIDI-x86_64.AppImage"
+          ./linuxdeploy-x86_64.AppImage \
+            --appdir AppDir \
+            --plugin qt \
+            --desktop-file AppDir/usr/share/applications/qspacemidi.desktop \
+            --icon-file resources/icons/qspacemidi.png \
+            --output appimage
+          mkdir -p dist
+          mv QSpaceMIDI-x86_64.AppImage dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qspacemidi-appimage
+          path: dist/*
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------
+  # macOS: signed-less .app bundle deployed with macdeployqt, shipped as a
+  # compressed disk image.
+  # ---------------------------------------------------------------------
+  macos:
+    name: macOS
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.*"
+          cache: true
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Deploy and package
+        run: |
+          macdeployqt build/qspacemidi.app -always-overwrite
+          mkdir -p dist/dmg
+          cp -R build/qspacemidi.app "dist/dmg/QSpaceMIDI.app"
+          ln -s /Applications dist/dmg/Applications
+          hdiutil create -volname QSpaceMIDI -srcfolder dist/dmg \
+            -ov -format UDZO dist/QSpaceMIDI-macOS.dmg
+          rm -rf dist/dmg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qspacemidi-macos
+          path: dist/*
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------
+  # Windows: MSVC build deployed with windeployqt, shipped as a zip.  No
+  # 3DxWare driver is needed, the raw HID device is opened directly.
+  # ---------------------------------------------------------------------
+  windows:
+    name: Windows
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.*"
+          arch: win64_msvc2022_64
+          cache: true
+
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Deploy and package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path staging\QSpaceMIDI | Out-Null
+          Copy-Item build\Release\qspacemidi.exe staging\QSpaceMIDI\ -ErrorAction SilentlyContinue
+          if (-Not (Test-Path staging\QSpaceMIDI\qspacemidi.exe)) {
+            Copy-Item build\qspacemidi.exe staging\QSpaceMIDI\
+          }
+          Copy-Item README.md, COPYING, COPYING.LESSER staging\QSpaceMIDI\
+          windeployqt --release --no-translations --no-system-d3d-compiler `
+            --no-opengl-sw staging\QSpaceMIDI\qspacemidi.exe
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path staging\QSpaceMIDI -DestinationPath dist\QSpaceMIDI-windows-x64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qspacemidi-windows
+          path: dist/*
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------
+  # Tagged builds turn into a GitHub release carrying every artifact.
+  # ---------------------------------------------------------------------
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [appimage, macos, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artifacts
+        run: |
+          mkdir -p release
+          find artifacts -type f -exec cp {} release/ \;
+          ls -la release
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true

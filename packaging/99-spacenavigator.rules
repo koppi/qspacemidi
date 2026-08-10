@@ -1,0 +1,18 @@
+# udev rules for 3Dconnexion / Logitech 3D mice
+#
+# QSpaceMIDI reads the device directly from /dev/input/event*, which is only
+# readable by root on most distributions.  These rules hand the device to the
+# logged in user, so that no 3DxWare driver and no root privileges are needed.
+#
+# Install to /etc/udev/rules.d/99-spacenavigator.rules and reload with:
+#
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+#
+# 3Dconnexion (SpaceNavigator, SpaceMouse, SpacePilot, Universal Receiver, ...)
+SUBSYSTEM=="input", ATTRS{idVendor}=="256f", MODE="0664", GROUP="plugdev", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="256f", MODE="0664", GROUP="plugdev", TAG+="uaccess"
+
+# Logitech branded 3D mice (SpaceNavigator, SpaceTraveller, SpaceBall 5000)
+SUBSYSTEM=="input", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c626", MODE="0664", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="input", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c623", MODE="0664", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="input", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c603", MODE="0664", GROUP="plugdev", TAG+="uaccess"

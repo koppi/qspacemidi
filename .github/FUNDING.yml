@@ -1,0 +1,10 @@
+# Sponsor buttons shown on the repository page.
+# See https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+github: [koppi]
+
+# Uncomment and fill in whichever of these you use:
+# ko_fi: koppi
+# liberapay: koppi
+# patreon: koppi
+# custom: ["https://paypal.me/koppi"]

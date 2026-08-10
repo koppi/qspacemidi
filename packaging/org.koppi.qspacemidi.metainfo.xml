@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2026 Jakob Flierl <jakob.flierl@gmail.com> -->
+<component type="desktop-application">
+  <id>org.koppi.qspacemidi</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LGPL-2.1-or-later</project_license>
+
+  <name>QSpaceMIDI</name>
+  <summary>Map a 3Dconnexion SpaceNavigator to MIDI CC messages</summary>
+
+  <description>
+    <p>
+      QSpaceMIDI turns the six degrees of freedom and the two buttons of a
+      3Dconnexion SpaceNavigator 3D mouse into MIDI control change messages,
+      so the device can drive parameters in Renoise or any other MIDI host.
+    </p>
+    <p>
+      Every axis has its own control change number, value mode - absolute or
+      one of three relative encodings - and sensitivity. A dead zone filters
+      the resting jitter of the cap, and the axis lock transmits only the axis
+      that is deflected the most, so parameters do not bleed into each other
+      while MIDI mapping.
+    </p>
+    <p>
+      The device is read directly through evdev, so no proprietary 3DxWare
+      driver is needed. A virtual ALSA sequencer port named QSpaceMIDI is
+      published for the host to connect to.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">qspacemidi.desktop</launchable>
+
+  <provides>
+    <modalias>usb:v256Fp*</modalias>
+    <modalias>usb:v046Dp*</modalias>
+  </provides>
+
+  <url type="homepage">https://koppi.github.io/qspacemidi/</url>
+  <url type="bugtracker">https://github.com/koppi/qspacemidi/issues</url>
+  <url type="vcs-browser">https://github.com/koppi/qspacemidi</url>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Per-axis CC number, mode and sensitivity</caption>
+      <image>https://koppi.github.io/qspacemidi/screenshot.png</image>
+    </screenshot>
+  </screenshots>
+
+  <categories>
+    <category>AudioVideo</category>
+    <category>Audio</category>
+    <category>Midi</category>
+  </categories>
+
+  <keywords>
+    <keyword>MIDI</keyword>
+    <keyword>SpaceNavigator</keyword>
+    <keyword>3Dconnexion</keyword>
+    <keyword>Renoise</keyword>
+  </keywords>
+
+  <developer id="io.github.koppi">
+    <name>Jakob Flierl</name>
+  </developer>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="1.0.0" date="2026-08-10">
+      <description>
+        <p>Initial release.</p>
+      </description>
+    </release>
+  </releases>
+</component>

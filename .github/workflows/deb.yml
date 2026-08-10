@@ -1,0 +1,155 @@
+name: debian packages
+
+# Builds a .deb for every Debian and Ubuntu release that ships Qt 6 together
+# with CMake 3.24 and a C++23 capable compiler.  Each build runs inside the
+# distribution's own container, arm64 through QEMU, and tagged builds are
+# attached to the GitHub release.
+#
+# Ubuntu 22.04 (jammy) and Debian 11 (bullseye) are deliberately absent:
+# jammy has CMake 3.22 and GCC 11, bullseye has no Qt 6 at all.  Use the
+# AppImage from the release page there.
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+    paths:
+      - "CMakeLists.txt"
+      - "src/**"
+      - "resources/**"
+      - "translations/**"
+      - "packaging/**"
+      - "debian/**"
+      - ".github/workflows/deb.yml"
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.distro }} ${{ matrix.codename }} (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Debian
+          - distro: debian
+            codename: bookworm
+            version: "12"
+            arch: amd64
+          - distro: debian
+            codename: bookworm
+            version: "12"
+            arch: arm64
+          - distro: debian
+            codename: trixie
+            version: "13"
+            arch: amd64
+          - distro: debian
+            codename: trixie
+            version: "13"
+            arch: arm64
+          - distro: debian
+            codename: forky
+            version: "14"
+            arch: amd64
+          - distro: debian
+            codename: forky
+            version: "14"
+            arch: arm64
+          # Ubuntu
+          - distro: ubuntu
+            codename: noble
+            version: "24.04"
+            arch: amd64
+          - distro: ubuntu
+            codename: noble
+            version: "24.04"
+            arch: arm64
+          - distro: ubuntu
+            codename: resolute
+            version: "26.04"
+            arch: amd64
+          - distro: ubuntu
+            codename: resolute
+            version: "26.04"
+            arch: arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        if: matrix.arch == 'arm64'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build package
+        run: |
+          ARCH="${{ matrix.arch }}"
+          CODENAME="${{ matrix.codename }}"
+          UPSTREAM="${GITHUB_REF_NAME#v}"
+          case "$GITHUB_REF" in
+            refs/tags/v*) VERSION="${UPSTREAM}~${CODENAME}" ;;
+            *)            VERSION="1.0.0~${CODENAME}" ;;
+          esac
+          PLATFORM="linux/amd64"
+          [ "$ARCH" = "arm64" ] && PLATFORM="linux/arm64/v8"
+
+          WORKSPACE_PARENT="$(dirname "$GITHUB_WORKSPACE")"
+          REPO_DIR="$(basename "$GITHUB_WORKSPACE")"
+
+          docker run --platform "$PLATFORM" --rm \
+            -v "${WORKSPACE_PARENT}:/workspace" \
+            -w "/workspace/${REPO_DIR}" \
+            -e VERSION="${VERSION}" \
+            -e CODENAME="${CODENAME}" \
+            -e REPO_DIR="${REPO_DIR}" \
+            -e DEBIAN_FRONTEND=noninteractive \
+            -e DEB_BUILD_OPTIONS=nocheck \
+            "${{ matrix.distro }}:${CODENAME}" bash -ec '
+            apt-get update -qq
+            apt-get install -y -qq --no-install-recommends \
+              build-essential ca-certificates cmake devscripts debhelper git \
+              pkgconf libasound2-dev libgl-dev libudev-dev \
+              qt6-base-dev qt6-base-dev-tools qt6-l10n-tools
+            sed -i "1s/.*/qspacemidi (${VERSION}) ${CODENAME}; urgency=medium/" debian/changelog
+            dpkg-buildpackage -b -uc -us -d
+            mkdir -p "/workspace/${REPO_DIR}/deb-output"
+            find /workspace -maxdepth 2 -type f \( -name "*.deb" -o -name "*.ddeb" \) \
+              -exec cp {} "/workspace/${REPO_DIR}/deb-output/" \;
+            ls -la "/workspace/${REPO_DIR}/deb-output"
+            '
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.distro }}-${{ matrix.codename }}-${{ matrix.arch }}
+          path: deb-output/
+          if-no-files-found: error
+
+  release:
+    name: Attach packages to the release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artifact directories
+        run: |
+          mkdir -p release-packages
+          find artifacts -type f \( -name "*.deb" -o -name "*.ddeb" \) \
+            -exec cp {} release-packages/ \;
+          ls -la release-packages
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release-packages/*
+          generate_release_notes: true

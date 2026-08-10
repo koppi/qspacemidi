@@ -1,0 +1,165 @@
+/*
+ * qspacemidi.qss - Aqua flavoured style sheet
+ *
+ * Recreates the look of the original Mac OS X "MIDI Navigator" window on
+ * every platform, on top of the Fusion style.
+ */
+
+QWidget {
+    background-color: #ececec;
+    color: #1d1d1d;
+    font-size: 12px;
+}
+
+QToolTip {
+    background-color: #fbfbc8;
+    color: #1d1d1d;
+    border: 1px solid #b0b0a0;
+    padding: 3px;
+}
+
+QGroupBox {
+    background-color: #f2f2f2;
+    border: 1px solid #c8c8c8;
+    border-radius: 6px;
+    margin-top: 16px;
+    padding-top: 4px;
+    font-weight: normal;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 4px;
+    top: 1px;
+    padding: 0 2px;
+    background: transparent;
+    color: #3a3a3a;
+}
+
+QLabel#axisLabel {
+    font-weight: bold;
+    font-size: 13px;
+    color: #2a2a2a;
+}
+
+QLabel#axisLabel:disabled {
+    color: #a0a0a0;
+}
+
+QLabel#statusLabel {
+    color: #5c5c5c;
+    font-size: 11px;
+    padding: 2px 2px 0 2px;
+}
+
+QLabel#statusLabel[error="true"] {
+    color: #a33a2a;
+}
+
+/*
+ * The combo boxes, spin boxes and their steppers keep the chrome of the
+ * base style: hand drawing them costs the platform arrows, which is worse
+ * than the small difference in bevel.
+ */
+QComboBox {
+    padding-left: 6px;
+    min-height: 18px;
+}
+
+QComboBox QAbstractItemView {
+    background: #ffffff;
+    border: 1px solid #a9a9a9;
+    selection-background-color: #3d80df;
+    selection-color: #ffffff;
+    outline: none;
+}
+
+QSpinBox {
+    background: #ffffff;
+    min-height: 18px;
+}
+
+QSpinBox:disabled {
+    background: #f0f0f0;
+    color: #a0a0a0;
+}
+
+QPushButton {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #ffffff, stop: 0.5 #f6f6f6, stop: 1 #e2e2e2);
+    border: 1px solid #a5a5a5;
+    border-radius: 12px;
+    padding: 3px 14px;
+    min-height: 18px;
+    color: #262626;
+}
+
+QPushButton:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #ffffff, stop: 1 #ececec);
+}
+
+QPushButton:pressed {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #d3e4f7, stop: 1 #a9c8ea);
+    border-color: #7ba2cb;
+}
+
+QPushButton:focus {
+    border-color: #6ba4dd;
+}
+
+QCheckBox {
+    spacing: 6px;
+}
+
+QToolButton#invertButton {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #ffffff, stop: 1 #e4e4e4);
+    border: 1px solid #a9a9a9;
+    border-radius: 4px;
+    padding: 0;
+    min-height: 18px;
+    font-size: 13px;
+    color: #3a3a3a;
+}
+
+QToolButton#invertButton:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #ffffff, stop: 1 #ededed);
+}
+
+QToolButton#invertButton:checked {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #9fc9f0, stop: 1 #4a8fd8);
+    border-color: #3a72c0;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+QToolButton#invertButton:disabled {
+    color: #a8a8a8;
+    border-color: #cccccc;
+}
+
+QMenu {
+    background: #f6f6f6;
+    border: 1px solid #b4b4b4;
+    padding: 4px 0;
+}
+
+QMenu::item {
+    padding: 4px 22px;
+}
+
+QMenu::item:selected {
+    background: #3d80df;
+    color: #ffffff;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #d2d2d2;
+    margin: 4px 8px;
+}

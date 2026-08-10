@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QSpaceMIDI - 3D mouse to MIDI CC</title>
+<meta name="description" content="Maps the six axes and two buttons of a 3Dconnexion SpaceNavigator to MIDI control change messages. Qt 6, C++23, Linux, macOS and Windows. No 3DxWare driver needed.">
+<link rel="icon" href="favicon.png">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --panel: #ffffff;
+    --text: #1d2126;
+    --muted: #5f6772;
+    --line: #dfe3e8;
+    --accent: #4d8f13;
+    --accent-strong: #3d7310;
+    --code-bg: #f0f2f4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16191d;
+      --panel: #1e2227;
+      --text: #e7eaee;
+      --muted: #9aa3ae;
+      --line: #2d333a;
+      --accent: #86cc2f;
+      --accent-strong: #a9dd62;
+      --code-bg: #23282e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+  }
+  a { color: var(--accent-strong); }
+  header {
+    padding: 56px 24px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  header img.logo { width: 96px; height: 96px; }
+  h1 { margin: 12px 0 6px; font-size: 2.4rem; letter-spacing: -0.02em; }
+  .tagline { margin: 0 auto; max-width: 40rem; color: var(--muted); font-size: 1.1rem; }
+  main { max-width: 62rem; margin: 0 auto; padding: 0 24px 72px; }
+  section { padding: 40px 0 8px; }
+  h2 { font-size: 1.45rem; margin: 0 0 16px; }
+  h3 { font-size: 1.1rem; margin: 24px 0 8px; }
+  .shot {
+    display: block;
+    margin: 28px auto 8px;
+    max-width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+    background: var(--panel);
+  }
+  .caption { text-align: center; color: var(--muted); font-size: 0.9rem; }
+  .buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 26px; }
+  .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #10240a; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 18px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .card h3 { margin-top: 0; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: var(--panel); }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+  }
+  pre code { background: none; padding: 0; }
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 28px 24px 48px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="favicon.png" alt="QSpaceMIDI icon">
+  <h1>QSpaceMIDI</h1>
+  <p class="tagline">
+    Turns a 3Dconnexion SpaceNavigator into a six-axis MIDI controller for
+    Renoise and any other MIDI host. Qt&nbsp;6, C++23, no 3DxWare driver
+    needed.
+  </p>
+  <div class="buttons">
+    <a class="btn primary" href="https://github.com/koppi/qspacemidi/releases/latest">Download</a>
+    <a class="btn" href="https://github.com/koppi/qspacemidi">Source on GitHub</a>
+  </div>
+</header>
+
+<main>
+
+<img class="shot" src="screenshot.png"
+     alt="The QSpaceMIDI window: Translate and Rotate groups with a level meter, CC mode, CC number and sensitivity knob per axis, a Buttons group and the MIDI output settings">
+<p class="caption">The window, modelled on Stefan Hoffmann's original Mac OS&nbsp;X <em>MIDI Navigator</em>.</p>
+
+<section>
+  <h2>What it does</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>All six degrees of freedom</h3>
+      <p>Push, pull, lift and twist the cap: every axis and both hardware
+      buttons send their own control change message.</p>
+    </div>
+    <div class="card">
+      <h3>Absolute and relative</h3>
+      <p>Per axis you pick absolute values or one of three relative
+      encodings - binary offset, two's complement or signed bit.</p>
+    </div>
+    <div class="card">
+      <h3>Dead zone and axis lock</h3>
+      <p>A configurable dead zone filters the resting jitter, and axis lock
+      transmits only the axis you are pushing, so parameters stop bleeding
+      into each other while MIDI mapping. Any axis can be inverted with its
+      <strong>±</strong> button.</p>
+    </div>
+    <div class="card">
+      <h3>No driver required</h3>
+      <p>The device is read directly: evdev on Linux, IOKit HID on macOS
+      and raw HID on Windows. 3DxWare stays uninstalled.</p>
+    </div>
+    <div class="card">
+      <h3>Virtual MIDI port</h3>
+      <p>On Linux and macOS the app publishes a <code>QSpaceMIDI</code> port
+      your host can connect to. On Windows, pick a loopMIDI port.</p>
+    </div>
+    <div class="card">
+      <h3>Lives in the tray</h3>
+      <p>Close the window and the mapping keeps running in the system tray.
+      Settings are stored with <code>QSettings</code> and restored on start.</p>
+    </div>
+    <div class="card">
+      <h3>Starts with your session</h3>
+      <p>One checkbox writes the platform's autostart entry - an XDG desktop
+      file, a launch agent or the Run key - so the mapping is live right
+      after login.</p>
+    </div>
+    <div class="card">
+      <h3>Nine languages</h3>
+      <p>Danish, English, Finnish, French, German, Italian, Japanese, Russian
+      and Simplified Chinese, following the system language.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Default mapping</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Axis</th><th>Direction</th><th>Default CC</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>X</td><td>Left / right</td><td>CC 1</td></tr>
+        <tr><td>Y</td><td>Forward / backward</td><td>CC 7</td></tr>
+        <tr><td>Z</td><td>Up / down</td><td>CC 74</td></tr>
+        <tr><td>RX</td><td>Tilt left / right</td><td>CC 10</td></tr>
+        <tr><td>RY</td><td>Tilt forward / backward</td><td>CC 71</td></tr>
+        <tr><td>RZ</td><td>Rotate</td><td>CC 91</td></tr>
+        <tr><td>Button 1</td><td>Press</td><td>CC 80</td></tr>
+        <tr><td>Button 2</td><td>Press</td><td>CC 81</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Using it with Renoise</h2>
+  <ol>
+    <li>Start QSpaceMIDI and move the cap - the meters follow the device.</li>
+    <li>In Renoise, open <em>Preferences &rarr; MIDI</em> and enable
+        <strong>QSpaceMIDI</strong> as an input device.</li>
+    <li>Right click the parameter you want to control and choose
+        <em>MIDI Map</em>.</li>
+    <li>Tick <strong>Axis lock</strong> in QSpaceMIDI, then push the axis you
+        want to assign: only that axis is transmitted, so the mapping lands
+        where you intended.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Building from source</h2>
+  <pre><code>git clone https://github.com/koppi/qspacemidi.git
+cd qspacemidi
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+./build/qspacemidi</code></pre>
+  <p>Needs CMake 3.24+, a C++23 compiler and Qt 6.4+. libremidi is fetched
+  automatically. On Linux install <code>qt6-base-dev</code>,
+  <code>qt6-l10n-tools</code>, <code>libasound2-dev</code> and
+  <code>libudev-dev</code> first, and copy
+  <code>packaging/99-spacenavigator.rules</code> to
+  <code>/etc/udev/rules.d/</code> so the device is readable without root.</p>
+  <p>Ready made <code>.deb</code> packages are built for Debian 12, 13 and 14
+  and for Ubuntu 24.04 and 26.04, on amd64 and arm64; every other Linux is
+  covered by the AppImage.</p>
+</section>
+
+</main>
+
+<footer>
+  <p>Copyright &copy; 2013-2026 Jakob Flierl -
+  released under the
+  <a href="https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html">GNU LGPL 2.1</a>
+  or later.</p>
+  <p>Inspired by Stefan Hoffmann's MIDI Navigator. Built with
+  <a href="https://www.qt.io/">Qt</a> and
+  <a href="https://github.com/atsushieno/libremidi">libremidi</a>.</p>
+</footer>
+
+</body>
+</html>
