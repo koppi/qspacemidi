@@ -567,7 +567,7 @@ void MainWindow::onTick()
 void MainWindow::updateStatus()
 {
     const QString device = m_device->isOpen()
-                               ? tr("3D mouse: %1").arg(m_device->devicePath())
+                               ? tr("3D mouse: %1").arg(m_device->deviceName())
                                : tr("3D mouse: not found");
     const QString midi = m_midi->isOpen() ? tr("MIDI: %1").arg(m_midi->connectionName())
                                           : tr("MIDI: not connected");
