@@ -66,6 +66,15 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.0.1" date="2026-08-10">
+      <description>
+        <p>
+          Fixes 3D mouse detection on Windows, where no device was found at
+          all, and reads the axes and buttons through the report descriptor
+          so that every 3Dconnexion model is decoded correctly.
+        </p>
+      </description>
+    </release>
     <release version="1.0.0" date="2026-08-10">
       <description>
         <p>Initial release.</p>

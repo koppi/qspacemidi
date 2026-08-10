@@ -1,3 +1,22 @@
+qspacemidi (1.0.1) unstable; urgency=medium
+
+  * Detect 3D mice again on Windows: the raw HID backend looked for a
+    vendor-defined top-level collection, which no 3Dconnexion device
+    actually exposes, so the mouse was never found.  Match the Generic
+    Desktop / Multi-Axis Controller collection instead and verify that it
+    declares the six axes.
+  * Decode the input reports through HidP_* rather than fixed byte offsets,
+    so both the wired SpaceNavigator, which splits translation and rotation
+    over two reports, and the wireless models, which pack all six axes into
+    one, are read correctly.
+  * Take the axis range from the report descriptor on Windows instead of
+    assuming +-512 and +-900, so full deflection reaches full scale.
+  * Emit the axis signals from the Windows and macOS backends, without
+    which the meters never moved and no MIDI was sent.
+  * Show the product name of the device instead of its raw HID path.
+
+ -- Jakob Flierl <jakob.flierl@gmail.com>  Mon, 10 Aug 2026 18:00:00 +0200
+
 qspacemidi (1.0.0) unstable; urgency=medium
 
   * Initial release.
