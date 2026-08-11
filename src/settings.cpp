@@ -75,6 +75,9 @@ Config loadConfig()
     config.axisLock = settings.value(QStringLiteral("axisLock"), config.axisLock).toBool();
     config.updateRate = std::clamp(
         settings.value(QStringLiteral("updateRate"), config.updateRate).toInt(), 10, 200);
+    const int idleTimeout
+        = settings.value(QStringLiteral("idleTimeout"), config.idleTimeout).toInt();
+    config.idleTimeout = idleTimeout <= 0 ? 0 : std::clamp(idleTimeout, 40, 2000);
     settings.endGroup();
 
     return config;
@@ -114,6 +117,7 @@ void saveConfig(const Config &config)
     settings.setValue(QStringLiteral("deadZone"), config.deadZone);
     settings.setValue(QStringLiteral("axisLock"), config.axisLock);
     settings.setValue(QStringLiteral("updateRate"), config.updateRate);
+    settings.setValue(QStringLiteral("idleTimeout"), config.idleTimeout);
     settings.endGroup();
 }
 

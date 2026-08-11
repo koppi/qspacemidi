@@ -21,6 +21,7 @@
 #include <QApplication>
 #include <QCheckBox>
 #include <QCloseEvent>
+#include <QElapsedTimer>
 #include <QComboBox>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -48,6 +49,9 @@ constexpr double RelativeStepsPerTick = 6.0;
 
 /*! How often a missing device is looked for again, in milliseconds. */
 constexpr int DeviceRetryInterval = 3000;
+
+/*! Shortest time a button indicator stays lit, so a tap is visible. */
+constexpr int ButtonIndicatorHold = 120;
 
 AxisRow::ModeList axisModes()
 {
@@ -109,6 +113,14 @@ MainWindow::MainWindow(QWidget *parent)
     m_deviceRetry->setInterval(DeviceRetryInterval);
     connect(m_deviceRetry, &QTimer::timeout, this, &MainWindow::connectDevice);
 
+    // Watchdog: a 3D mouse reports continuously while its cap is deflected,
+    // so silence means the cap has sprung back - even when the report that
+    // says so never arrived.
+    m_idle = new QTimer(this);
+    m_idle->setSingleShot(true);
+    m_idle->setInterval(m_config.idleTimeout);
+    connect(m_idle, &QTimer::timeout, this, &MainWindow::onDeviceIdle);
+
     connectDevice();
     updateStatus();
 
@@ -127,6 +139,7 @@ MainWindow::~MainWindow()
     // everything that could still call back into the window first.
     m_tick->stop();
     m_deviceRetry->stop();
+    m_idle->stop();
     m_device->disconnect(this);
     m_midi->disconnect(this);
     m_device->close();
@@ -176,6 +189,8 @@ void MainWindow::buildUi()
         row->setSensitivityEnabled(false);
         row->setInvertEnabled(false);
         row->setToolTip(tr("Hardware button %1").arg(i + 1));
+        // A button is a lamp, not a meter: dark when it is not pressed.
+        row->setRestLevel(-1.0);
         row->setLevel(-1.0);
         buttons->addWidget(row);
         m_buttonRows[i] = row;
@@ -446,7 +461,14 @@ void MainWindow::connectDevice()
 void MainWindow::onDeviceOpened()
 {
     m_deviceRetry->stop();
+
+    // An absolute device sends the centre position when the cap springs
+    // back, so the watchdog is only needed - and only correct - for devices
+    // that report deltas and simply go quiet.
+    m_idleWatchdog = !m_device->reportsAbsolutePosition();
+
     m_deflection.fill(0.0);
+    m_peak.fill(0.0);
     m_accumulator.fill(0.0);
     m_lastAbsolute.fill(-1);
     updateStatus();
@@ -454,7 +476,10 @@ void MainWindow::onDeviceOpened()
 
 void MainWindow::onDeviceClosed()
 {
+    m_idle->stop();
+    m_idleWatchdog = false;
     m_deflection.fill(0.0);
+    m_peak.fill(0.0);
     for (AxisRow *row : m_axisRows) {
         row->setLevel(0.0);
     }
@@ -466,12 +491,23 @@ void MainWindow::onDeviceClosed()
 
 void MainWindow::onAxesNormChanged(const SpaceNavigator::AxesNorm &axes)
 {
-    m_deflection[AxisX] = axes.x;
-    m_deflection[AxisY] = axes.y;
-    m_deflection[AxisZ] = axes.z;
-    m_deflection[AxisRX] = axes.rx;
-    m_deflection[AxisRY] = axes.ry;
-    m_deflection[AxisRZ] = axes.rz;
+    if (m_idleWatchdog && m_config.idleTimeout > 0) {
+        m_idle->start(m_config.idleTimeout);
+    }
+
+    const double values[NumAxes] = {axes.x, axes.y, axes.z,
+                                    axes.rx, axes.ry, axes.rz};
+    for (int i = 0; i < NumAxes; ++i) {
+        m_deflection[i] = values[i];
+        if (std::abs(values[i]) > std::abs(m_peak[i])) {
+            m_peak[i] = values[i];
+        }
+
+        // The meters show what the cap is doing, not what we transmit: no
+        // dead zone, no axis lock and no waiting for the next CC update, so
+        // the smallest movement is visible the moment it is reported.
+        m_axisRows[i]->setLevel(m_config.axes[i].invert ? -values[i] : values[i]);
+    }
 }
 
 void MainWindow::onButtonChanged(int button, bool pressed)
@@ -491,15 +527,44 @@ void MainWindow::onButtonChanged(int button, bool pressed)
         state = m_buttonLatch[button];
     }
 
-    m_buttonRows[button]->setLevel(state ? 1.0 : -1.0);
-
+    // MIDI first: the indicator must never delay the message.
     if (mapping.enabled) {
         m_midi->sendControlChange(m_config.channel, mapping.cc, state ? 127 : 0);
     }
+
+    m_buttonState[button] = state;
+
+    if (state) {
+        m_buttonSince[button].start();
+        m_buttonRows[button]->setLevel(1.0);
+        return;
+    }
+
+    // A quick tap can be over within one frame, which would leave the
+    // indicator blinking invisibly; hold it lit for a moment instead.
+    const qint64 lit = m_buttonSince[button].isValid() ? m_buttonSince[button].elapsed()
+                                                       : ButtonIndicatorHold;
+    if (lit >= ButtonIndicatorHold) {
+        m_buttonRows[button]->setLevel(-1.0);
+        return;
+    }
+    QTimer::singleShot(ButtonIndicatorHold - static_cast<int>(lit), this, [this, button] {
+        if (!m_buttonState[button]) {
+            m_buttonRows[button]->setLevel(-1.0);
+        }
+    });
 }
 
 void MainWindow::onTick()
 {
+    // Whatever the peak of this window was, the next one starts from the
+    // deflection the cap actually has now.
+    const struct PeakReset {
+        std::array<double, NumAxes> &peak;
+        const std::array<double, NumAxes> &current;
+        ~PeakReset() { peak = current; }
+    } peakReset{m_peak, m_deflection};
+
     std::array<double, NumAxes> processed{};
     int dominant = -1;
     double dominantMagnitude = 0.0;
@@ -510,7 +575,7 @@ void MainWindow::onTick()
             processed[i] = 0.0;
             continue;
         }
-        double value = applyDeadZone(m_deflection[i], m_config.deadZone);
+        double value = applyDeadZone(m_peak[i], m_config.deadZone);
         if (axis.invert) {
             value = -value;
         }
@@ -536,7 +601,6 @@ void MainWindow::onTick()
                             && (!m_config.axisLock || m_lockedAxis < 0 || m_lockedAxis == i);
 
         const double value = active ? processed[i] : 0.0;
-        m_axisRows[i]->setLevel(value);
 
         if (!active) {
             m_accumulator[i] = 0.0;
@@ -562,6 +626,18 @@ void MainWindow::onTick()
             }
         }
     }
+}
+
+void MainWindow::onDeviceIdle()
+{
+    m_peak.fill(0.0);
+    for (AxisRow *row : m_axisRows) {
+        row->setLevel(0.0);
+    }
+    // Nothing heard from the device: centre every axis, so that the absolute
+    // modes send their centre value once and the relative modes stop
+    // accumulating.  The next report starts the watchdog again.
+    m_deflection.fill(0.0);
 }
 
 void MainWindow::updateStatus()
@@ -597,6 +673,7 @@ void MainWindow::applyDemoState()
     static const double pose[NumAxes] = {0.62, -0.35, 0.48, 0.25, -0.18, 0.72};
     for (int i = 0; i < NumAxes; ++i) {
         m_deflection[i] = pose[i];
+        m_peak[i] = pose[i];
         m_axisRows[i]->setLevel(pose[i]);
     }
     m_buttonRows[0]->setLevel(1.0);

@@ -112,6 +112,7 @@ void winEnumerate3DMice(QStringList &out);
 SpaceNavigator::SpaceNavigator(QObject *parent)
   : QObject(parent)
   , m_platform(nullptr)
+  , m_absolutePosition(true)
 {
   resetState();
 }
@@ -140,6 +141,11 @@ void SpaceNavigator::resetState()
 bool SpaceNavigator::isOpen() const
 {
   return m_platform != nullptr;
+}
+
+bool SpaceNavigator::reportsAbsolutePosition() const
+{
+  return m_absolutePosition;
 }
 
 QString SpaceNavigator::devicePath() const
@@ -481,6 +487,13 @@ bool SpaceNavigator::openPath(const QString &path)
 
   resetState();
   updateAxisRanges(fd);
+
+  // EV_ABS devices report where the cap is, EV_REL ones only that it moved.
+  // The distinction decides whether letting go produces an event at all.
+  unsigned char evBits[(EV_MAX + 7) / 8] = {0};
+  m_absolutePosition = ioctl(fd, EVIOCGBIT(0, sizeof(evBits)), evBits) >= 0
+                       && test_bit(EV_ABS, evBits) != 0;
+
   m_platform = new PlatformData;
   m_platform->fd = fd;
   m_platform->path = path;
@@ -490,6 +503,13 @@ bool SpaceNavigator::openPath(const QString &path)
           this, &SpaceNavigator::onReadyRead);
 
   emit deviceOpened();
+
+  // Start from what the device actually reports rather than from zero: a
+  // button may already be held and the cap may already be deflected.  Without
+  // this the first event for a held button is its release, which looks like
+  // no change at all and leaves the two states inverted from then on.
+  resyncState();
+  emitAxes();
   return true;
 }
 
@@ -503,9 +523,33 @@ void SpaceNavigator::poll()
   struct input_event ev;
   ssize_t n;
   bool axesUpdated = false;
+
+  // Set between SYN_DROPPED and the SYN_REPORT that closes the gap: the
+  // kernel's queue overflowed and the events in between are incomplete, so
+  // they must be discarded and the state read back from the device.
+  bool dropped = false;
+
   while ((n = ::read(m_platform->fd, &ev, sizeof(struct input_event))) > 0)
   {
     if (static_cast<size_t>(n) < sizeof(struct input_event))
+    {
+      continue;
+    }
+    if (ev.type == EV_SYN)
+    {
+      if (ev.code == SYN_DROPPED)
+      {
+        dropped = true;
+      }
+      else if (ev.code == SYN_REPORT && dropped)
+      {
+        dropped = false;
+        resyncState();
+        axesUpdated = true;
+      }
+      continue;
+    }
+    if (dropped)
     {
       continue;
     }
@@ -539,6 +583,36 @@ void SpaceNavigator::poll()
   if (axesUpdated)
   {
     emitAxes();
+  }
+}
+
+void SpaceNavigator::resyncState()
+{
+  if (!m_platform || m_platform->fd < 0)
+  {
+    return;
+  }
+
+  // Axes: ask the device for the value it holds right now.
+  static const int absCodes[NUM_AXES] =
+      {ABS_X, ABS_Y, ABS_Z, ABS_RX, ABS_RY, ABS_RZ};
+  for (int i = 0; i < NUM_AXES; i++)
+  {
+    struct input_absinfo info;
+    if (ioctl(m_platform->fd, EVIOCGABS(absCodes[i]), &info) == 0)
+    {
+      handleAxisAbsolute(i, info.value);
+    }
+  }
+
+  // Buttons: EVIOCGKEY returns a bitmask of the keys that are held.
+  unsigned char keyBits[(KEY_MAX + 7) / 8] = {0};
+  if (ioctl(m_platform->fd, EVIOCGKEY(sizeof(keyBits)), keyBits) >= 0)
+  {
+    for (int i = 0; i < NUM_BUTTONS; i++)
+    {
+      handleButton(i, test_bit(BTN_0 + i, keyBits) != 0);
+    }
   }
 }
 

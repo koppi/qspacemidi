@@ -184,7 +184,12 @@ void AxisRow::setInverted(bool inverted)
 
 void AxisRow::setLevel(double level)
 {
-    m_meter->setValue(m_muted ? 0.0 : level);
+    m_meter->setValue(m_muted ? m_restLevel : level);
+}
+
+void AxisRow::setRestLevel(double level)
+{
+    m_restLevel = level;
 }
 
 void AxisRow::setBipolarMeter(bool bipolar)
@@ -200,7 +205,7 @@ void AxisRow::updateMutedLook()
     m_cc->setEnabled(!m_muted);
     m_knob->setEnabled(!m_muted);
     m_invert->setEnabled(!m_muted);
-    m_meter->setValue(0.0);
+    m_meter->setValue(m_restLevel);
 }
 
 void AxisRow::showContextMenu(const QPoint &pos)

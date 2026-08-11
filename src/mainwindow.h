@@ -17,6 +17,8 @@
 
 #include <QWidget>
 
+#include <QElapsedTimer>
+
 #include <array>
 
 class QAction;
@@ -74,6 +76,7 @@ private:
     void onDeviceOpened();
     void onDeviceClosed();
     void onTick();
+    void onDeviceIdle();
     void onTrayActivated(int reason);
     void setAutostartEnabled(bool enabled);
     void showAbout();
@@ -86,6 +89,7 @@ private:
     MidiEngine *m_midi = nullptr;
     QTimer *m_tick = nullptr;
     QTimer *m_deviceRetry = nullptr;
+    QTimer *m_idle = nullptr;
 
     std::array<AxisRow *, NumAxes> m_axisRows{};
     std::array<AxisRow *, NumButtons> m_buttonRows{};
@@ -104,6 +108,25 @@ private:
     /*! Latest normalised deflections, updated from the device signal. */
     std::array<double, NumAxes> m_deflection{};
 
+    /*!
+     * \brief Largest deflection seen since the previous tick.
+     *
+     * The device reports faster than the CC update rate, so a quick flick
+     * can begin and end between two ticks.  Sending the extreme of the
+     * window rather than whatever happened to be current when the timer
+     * fired keeps those flicks from disappearing.
+     */
+    std::array<double, NumAxes> m_peak{};
+
+    /*!
+     * \brief Whether silence from the device means the cap was released.
+     *
+     * Only true for devices that report deltas: an absolute device always
+     * announces the centre position, and the kernel drops repeated equal
+     * values, so a steadily held cap is silent and must not be re-centred.
+     */
+    bool m_idleWatchdog = false;
+
     /*! Fractional part carried between ticks in the relative modes. */
     std::array<double, NumAxes> m_accumulator{};
 
@@ -112,6 +135,12 @@ private:
 
     /*! Latch state of the buttons in toggle mode. */
     std::array<bool, NumButtons> m_buttonLatch{};
+
+    /*! State last sent for each button, for the indicator hold below. */
+    std::array<bool, NumButtons> m_buttonState{};
+
+    /*! When each button's indicator lit up, so a tap stays visible. */
+    std::array<QElapsedTimer, NumButtons> m_buttonSince{};
 
     /*! Axis currently selected by the axis lock, -1 when none. */
     int m_lockedAxis = -1;

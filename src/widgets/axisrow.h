@@ -77,6 +77,15 @@ public:
     /*! Draws the meter filled from the centre (used for the buttons). */
     void setBipolarMeter(bool bipolar);
 
+    /*!
+     * \brief The level that means "nothing to show" for this row.
+     *
+     * An axis rests in the middle of its travel, so 0 leaves the meter half
+     * filled, which is what an idle axis should look like.  A button is
+     * either lit or dark, so its rest level is -1 and the meter empties.
+     */
+    void setRestLevel(double level);
+
 signals:
     void modeChanged(int mode);
     void ccChanged(int cc);
@@ -95,6 +104,7 @@ private:
     Knob *m_knob = nullptr;
     QWidget *m_knobPlaceholder = nullptr;
     QToolButton *m_invert = nullptr;
+    double m_restLevel = 0.0;
     bool m_muted = false;
     bool m_inverted = false;
 };

@@ -1,3 +1,32 @@
+qspacemidi (1.0.2) unstable; urgency=medium
+
+  * Show the state a button is really in.  The driver assumed both buttons
+    were released when it opened the device, so a button the receiver already
+    held was inverted from then on: its press was swallowed as "no change"
+    and its release lit the indicator.  Axes and buttons are now seeded from
+    the device with EVIOCGKEY and EVIOCGABS at open.
+  * Stop drawing an idle button indicator half lit: a row now knows whether
+    it is a bipolar meter, which rests in the middle, or a lamp, which rests
+    dark.
+  * Keep a button indicator lit for at least 120 ms, so a tap that begins and
+    ends within one frame is still visible.  The MIDI message is sent first
+    and is never delayed by the indicator.
+  * Follow the cap in the meters directly, at the rate the device reports,
+    without the dead zone, the axis lock or the wait for the next CC update.
+    The meters show what the device does; the rows below say what is sent.
+  * Transmit the largest deflection seen since the previous CC update rather
+    than the latest sample, so a quick flick of the cap is no longer lost to
+    the update rate.
+  * Only time out into the centre position on devices that report relative
+    movement.  Absolute devices announce the centre themselves, and the
+    kernel drops repeated equal values, so the timeout re-centred a cap that
+    was merely being held still or moved slowly.  The timeout is configurable
+    as input/idleTimeout.
+  * Resynchronise with the device after SYN_DROPPED on Linux, where the
+    kernel's event queue overflowed and events were genuinely lost.
+
+ -- Jakob Flierl <jakob.flierl@gmail.com>  Tue, 11 Aug 2026 14:45:00 +0200
+
 qspacemidi (1.0.1) unstable; urgency=medium
 
   * Detect 3D mice again on Windows: the raw HID backend looked for a

@@ -98,6 +98,20 @@ struct Config {
     bool axisLock = false;   //!< only transmit the dominant axis
     int updateRate = 60;     //!< CC updates per second, 10..200
 
+    /*!
+     * \brief Silence after which the cap counts as released, in ms.
+     *
+     * A 3D mouse reports continuously while the cap is deflected and goes
+     * quiet once it springs back - but the report that carries the centre
+     * position is easily missed when the cap is released quickly, and
+     * relative devices never send one at all.  When the device has said
+     * nothing for this long, the axes are treated as centred.
+     *
+     * 0 disables the watchdog, for the rare device that only reports on
+     * change and would otherwise be re-centred while held still.
+     */
+    int idleTimeout = 150;
+
     QString portName;        //!< output port to connect to, empty = virtual
     bool useVirtualPort = true;
 

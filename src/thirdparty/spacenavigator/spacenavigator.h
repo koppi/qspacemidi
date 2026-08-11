@@ -160,6 +160,19 @@ public:
     bool isOpen() const;
 
     /*!
+     * \brief Whether the device reports absolute axis positions.
+     *
+     * True for devices that send the current deflection of the cap (macOS
+     * and Windows HID, and Linux EV_ABS): letting go always produces an
+     * event carrying the centre position.
+     *
+     * False for devices that report movement as deltas (Linux EV_REL).
+     * Those go quiet when the cap stops moving and never announce that it
+     * has sprung back, so the consumer has to time out instead.
+     */
+    bool reportsAbsolutePosition() const;
+
+    /*!
      * \brief Returns a platform-specific description of the open device
      *        (device node on Linux, HID path on Windows, product name on
      *        macOS), or an empty string if closed.
@@ -258,6 +271,14 @@ private:
     void setNormalized(int index, double deflection);
 #if defined(Q_OS_LINUX)
     void updateAxisRanges(int fd);
+
+    /*!
+     * \brief Reads axes and buttons back from the device.
+     *
+     * Called after SYN_DROPPED, where the kernel's event queue overflowed
+     * and the incremental stream can no longer be trusted.
+     */
+    void resyncState();
 #endif
 #if defined(Q_OS_WIN)
     void startWindowsRead();
@@ -293,6 +314,9 @@ private:
 
     /// Scale factors mapping raw axis values to [-1, 1].
     double m_axisScale[NUM_AXES];
+
+    /// See reportsAbsolutePosition(); absolute unless evdev says otherwise.
+    bool m_absolutePosition;
 };
 
 #endif // SPACENAVIGATOR_H

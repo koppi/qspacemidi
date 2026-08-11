@@ -1,5 +1,5 @@
 '\" t
-.TH QSPACEMIDI 1 "August 2026" "qspacemidi 1.0.1" "User Commands"
+.TH QSPACEMIDI 1 "August 2026" "qspacemidi 1.0.2" "User Commands"
 .SH NAME
 qspacemidi \- map a 3Dconnexion SpaceNavigator to MIDI CC messages
 .SH SYNOPSIS
@@ -91,6 +91,21 @@ Right click a row in the window to mute an axis or to reset its sensitivity;
 the
 .B \(+-
 button at the end of a row inverts its direction.
+.PP
+Devices that report movement as deltas rather than as positions \- Linux
+.B EV_REL
+\- go quiet when the cap stops moving and never announce that it sprang back.
+After
+.I input/idleTimeout
+milliseconds of silence \- 150 by default, 0 disables it \- their axes are
+therefore treated as centred.  Devices that report absolute positions announce
+the centre themselves and are left alone.
+.PP
+Between two CC updates the largest deflection seen is the one transmitted, so
+a quick flick of the cap is not lost to the update rate.  On Linux the driver
+also resynchronises with the device after
+.BR SYN_DROPPED ,
+where the kernel's event queue overflowed and events were genuinely lost.
 .SH SEE ALSO
 .BR aconnect (1),
 .BR aseqdump (1)

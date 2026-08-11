@@ -153,6 +153,10 @@ create a port there and select it in the **Port** box.
 Tip: use the sensitivity knob to trade range against precision, and raise the
 dead zone if a parameter drifts while the cap is at rest.
 
+The meters follow the cap itself, at whatever rate the device reports: they
+ignore the dead zone and the axis lock, so even a movement too small to send a
+CC is visible. What reaches the host is what the rows below the meters say.
+
 ## Command line
 
 ```
@@ -201,6 +205,25 @@ Settings are written through `QSettings`, which means:
 - Windows: `HKEY_CURRENT_USER\Software\koppi\QSpaceMIDI`
 
 Delete that entry to return to the defaults.
+
+Two keys have no control in the window:
+
+| Key | Default | Meaning |
+| --- | ------- | ------- |
+| `input/updateRate` | 60 | CC updates per second, 10..200 |
+| `input/idleTimeout` | 150 | Milliseconds of silence after which the cap counts as released, 40..2000; 0 disables the watchdog |
+
+`idleTimeout` only applies to devices that report **relative** movement
+(Linux `EV_REL`). Those go quiet once the cap stops moving and never announce
+that it sprang back, so silence is the only way to tell; after `idleTimeout`
+of it the axes are treated as centred. Set 0 to switch that off.
+
+Devices that report **absolute** positions - Windows and macOS HID, and Linux
+`EV_ABS`, which covers every current 3Dconnexion model - always send an event
+carrying the centre position, so the watchdog stays off for them. It has to:
+the kernel drops repeated identical values, so a cap held at a steady
+deflection produces no events at all, and a watchdog would wrongly re-centre
+it.
 
 ## Layout of the source
 
