@@ -112,7 +112,7 @@ jobs:
             -e CODENAME="${CODENAME}" \
             -e REPO_DIR="${REPO_DIR}" \
             -e DEBIAN_FRONTEND=noninteractive \
-            -e DEB_BUILD_OPTIONS=nocheck \
+            -e DEB_BUILD_OPTIONS="nocheck noautodbgsym" \
             "${{ matrix.distro }}:${CODENAME}" bash -ec '
             apt-get update -qq
             apt-get install -y -qq --no-install-recommends \
@@ -122,8 +122,8 @@ jobs:
             sed -i "1s/.*/qspacemidi (${VERSION}) ${CODENAME}; urgency=medium/" debian/changelog
             dpkg-buildpackage -b -uc -us -d
             mkdir -p "/workspace/${REPO_DIR}/deb-output"
-            find /workspace -maxdepth 2 -type f \( -name "*.deb" -o -name "*.ddeb" \) \
-              -exec cp {} "/workspace/${REPO_DIR}/deb-output/" \;
+            find /workspace -maxdepth 2 -type f -name "*.deb" \
+              ! -name "*-dbgsym_*" -exec cp {} "/workspace/${REPO_DIR}/deb-output/" \;
             ls -la "/workspace/${REPO_DIR}/deb-output"
             '
 
@@ -149,11 +149,12 @@ jobs:
       - name: Flatten artifact directories
         run: |
           mkdir -p release-packages
-          find artifacts -type f \( -name "*.deb" -o -name "*.ddeb" \) \
-            -exec cp {} release-packages/ \;
+          find artifacts -type f -name "*.deb" \
+            ! -name "*-dbgsym_*" -exec cp {} release-packages/ \;
           ls -la release-packages
 
+      # The notes are written by the build workflow; this job only adds files
+      # and must leave the description alone.
       - uses: softprops/action-gh-release@v2
         with:
           files: release-packages/*
-          generate_release_notes: true
