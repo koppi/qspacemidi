@@ -115,6 +115,18 @@ struct Config {
     QString portName;        //!< output port to connect to, empty = virtual
     bool useVirtualPort = true;
 
+    /*!
+     * \brief Which tray icon to use: "auto", "colour" or "monochrome".
+     *
+     * Desktops that follow the freedesktop status notifier protocol render
+     * the tray icon themselves when they are given its name from the icon
+     * theme, and KDE recolours a monochrome one to match the panel.  "auto"
+     * therefore uses the monochrome icon wherever the icon theme provides
+     * it, and the colourful one everywhere else, where an icon we cannot
+     * have recoloured might come out invisible on a dark panel.
+     */
+    QString trayIconStyle{QStringLiteral("auto")};
+
     Config();
 };
 

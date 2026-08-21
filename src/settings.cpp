@@ -69,6 +69,16 @@ Config loadConfig()
         = settings.value(QStringLiteral("virtualPort"), config.useVirtualPort).toBool();
     settings.endGroup();
 
+    settings.beginGroup(QStringLiteral("tray"));
+    config.trayIconStyle
+        = settings.value(QStringLiteral("iconStyle"), config.trayIconStyle).toString();
+    if (config.trayIconStyle != QLatin1String("colour")
+        && config.trayIconStyle != QLatin1String("color")
+        && config.trayIconStyle != QLatin1String("monochrome")) {
+        config.trayIconStyle = QStringLiteral("auto");
+    }
+    settings.endGroup();
+
     settings.beginGroup(QStringLiteral("input"));
     config.deadZone
         = std::clamp(settings.value(QStringLiteral("deadZone"), config.deadZone).toInt(), 0, 50);
@@ -111,6 +121,10 @@ void saveConfig(const Config &config)
     settings.setValue(QStringLiteral("channel"), config.channel);
     settings.setValue(QStringLiteral("port"), config.portName);
     settings.setValue(QStringLiteral("virtualPort"), config.useVirtualPort);
+    settings.endGroup();
+
+    settings.beginGroup(QStringLiteral("tray"));
+    settings.setValue(QStringLiteral("iconStyle"), config.trayIconStyle);
     settings.endGroup();
 
     settings.beginGroup(QStringLiteral("input"));

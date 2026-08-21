@@ -181,6 +181,29 @@ which launches QSpaceMIDI with `--minimized` so it goes straight to the tray:
 
 Unticking the box removes the entry again.
 
+## Tray icon
+
+KDE draws a status notifier icon from the icon theme when it is given the
+icon's *name*, which is what lets it recolour a monochrome icon to match the
+panel - light text on a dark panel and the other way round. QSpaceMIDI
+therefore installs a monochrome icon as
+`share/icons/hicolor/scalable/status/qspacemidi-symbolic.svg`, drawn to the
+Breeze convention, and hands the tray its name.
+
+`tray/iconStyle` in the configuration chooses between them:
+
+| Value | Tray icon |
+| ----- | --------- |
+| `auto` (default) | monochrome wherever the icon theme provides it, colourful otherwise |
+| `monochrome` | always the monochrome icon |
+| `colour` | always the colourful icon |
+
+`auto` falls back to the colourful icon when the monochrome one is not
+installed system wide - running straight from a build directory, or from the
+AppImage, whose files the panel process cannot see. A colourful icon travels
+to the panel as pixels and stays visible on any panel; a monochrome one that
+the desktop cannot look up would leave an empty space.
+
 ## Languages
 
 The interface ships in Danish, English, Finnish, French, German, Italian,
@@ -210,6 +233,7 @@ Two keys have no control in the window:
 
 | Key | Default | Meaning |
 | --- | ------- | ------- |
+| `tray/iconStyle` | `auto` | `auto`, `monochrome` or `colour`, see [Tray icon](#tray-icon) |
 | `input/updateRate` | 60 | CC updates per second, 10..200 |
 | `input/idleTimeout` | 150 | Milliseconds of silence after which the cap counts as released, 40..2000; 0 disables the watchdog |
 

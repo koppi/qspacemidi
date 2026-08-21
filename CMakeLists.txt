@@ -12,7 +12,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(qspacemidi
-    VERSION 1.0.2
+    VERSION 1.0.3
     DESCRIPTION "Map a 3Dconnexion SpaceNavigator to MIDI CC messages"
     HOMEPAGE_URL "https://github.com/koppi/qspacemidi"
     LANGUAGES CXX)
@@ -250,6 +250,10 @@ if(UNIX AND NOT APPLE)
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
     install(FILES resources/icons/qspacemidi.svg
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps)
+    # The monochrome tray icon belongs in the status category, where desktops
+    # look for the icon behind a status notifier item.
+    install(FILES resources/icons/qspacemidi-symbolic.svg
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/status)
     install(FILES packaging/org.koppi.qspacemidi.metainfo.xml
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo)
     # /etc for a local install; distribution packages point this at

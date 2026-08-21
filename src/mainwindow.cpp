@@ -23,6 +23,7 @@
 #include <QCloseEvent>
 #include <QElapsedTimer>
 #include <QComboBox>
+#include <QFileInfo>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -32,6 +33,7 @@
 #include <QPushButton>
 #include <QSignalBlocker>
 #include <QSpinBox>
+#include <QStandardPaths>
 #include <QStyle>
 #include <QSystemTrayIcon>
 #include <QTimer>
@@ -337,6 +339,63 @@ void MainWindow::buildUi()
     layout->addWidget(m_statusLabel);
 }
 
+namespace {
+
+/*! Theme name of the monochrome tray icon installed by this package. */
+const QLatin1String SymbolicIconName{"qspacemidi-symbolic"};
+
+/*!
+ * \brief Whether the desktop can find the monochrome icon on its own.
+ *
+ * The status notifier protocol hands the desktop an icon *name*, and the
+ * panel then looks it up in the icon theme itself.  So it is not enough for
+ * us to find the icon: it has to sit somewhere the panel process can reach
+ * too.  Inside an AppImage the icon lives under $APPDIR, which nothing else
+ * can see, and using the name there would leave an empty space in the tray.
+ */
+bool symbolicIconIsVisibleToTheDesktop()
+{
+    if (!QIcon::hasThemeIcon(SymbolicIconName)) {
+        return false;
+    }
+
+    const QString appDir = qEnvironmentVariable("APPDIR");
+    if (appDir.isEmpty()) {
+        return true;
+    }
+
+    const QString relative
+        = QStringLiteral("/icons/hicolor/scalable/status/%1.svg").arg(SymbolicIconName);
+    const QStringList dataDirs
+        = QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
+    for (const QString &dir : dataDirs) {
+        if (!dir.startsWith(appDir) && QFileInfo::exists(dir + relative)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+} // namespace
+
+QIcon MainWindow::trayIcon() const
+{
+    const bool monochrome = m_config.trayIconStyle == QLatin1String("monochrome")
+                            || (m_config.trayIconStyle == QLatin1String("auto")
+                                && symbolicIconIsVisibleToTheDesktop());
+
+    // QIcon::fromTheme() keeps the icon's name, and the status notifier
+    // protocol passes that name to the desktop rather than a bitmap.  That is
+    // what lets KDE draw the icon from its own theme and recolour it to the
+    // panel; an icon built from our resources can only travel as pixels, and
+    // a fixed colour cannot suit both a light and a dark panel.
+    if (monochrome && QIcon::hasThemeIcon(SymbolicIconName)) {
+        return QIcon::fromTheme(SymbolicIconName);
+    }
+
+    return QIcon(QStringLiteral(":/icons/qspacemidi.png"));
+}
+
 void MainWindow::buildTrayIcon()
 {
     if (!QSystemTrayIcon::isSystemTrayAvailable()) {
@@ -355,7 +414,7 @@ void MainWindow::buildTrayIcon()
     QAction *quitAction = m_trayMenu->addAction(tr("Quit"));
     connect(quitAction, &QAction::triggered, this, &MainWindow::quitApplication);
 
-    m_tray = new QSystemTrayIcon(QIcon(QStringLiteral(":/icons/qspacemidi.png")), this);
+    m_tray = new QSystemTrayIcon(trayIcon(), this);
     m_tray->setContextMenu(m_trayMenu);
     m_tray->setToolTip(tr("QSpaceMIDI"));
     connect(m_tray, &QSystemTrayIcon::activated, this,

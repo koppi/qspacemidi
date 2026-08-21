@@ -18,6 +18,7 @@
 #include <QWidget>
 
 #include <QElapsedTimer>
+#include <QIcon>
 
 #include <array>
 
@@ -64,6 +65,9 @@ protected:
 private:
     void buildUi();
     void buildTrayIcon();
+
+    /*! The icon the tray should show, honouring Config::trayIconStyle. */
+    QIcon trayIcon() const;
     void connectDevice();
     void applyConfigToUi();
     void refreshPortList();
