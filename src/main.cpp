@@ -10,6 +10,7 @@
  */
 
 #include "mainwindow.h"
+#include "singleinstance.h"
 
 #include <QApplication>
 #include <QCommandLineOption>
@@ -108,7 +109,19 @@ int main(int argc, char *argv[])
 
     parser.process(app);
 
+    // Only one instance per user: a second launch asks the first to show
+    // its window and then bows out.  --screenshot is exempt, it renders a
+    // throwaway window and exits without touching the running instance.
+    qspacemidi::SingleInstance instance;
+    if (!parser.isSet(screenshotOption)
+        && !instance.tryToRun(!parser.isSet(minimizedOption))) {
+        return 0;
+    }
+
     qspacemidi::MainWindow window;
+
+    QObject::connect(&instance, &qspacemidi::SingleInstance::activationRequested,
+                     &window, [&window] { window.showAndRaise(); });
 
     if (parser.isSet(screenshotOption)) {
         const QString path = parser.value(screenshotOption);

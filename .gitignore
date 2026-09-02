@@ -43,6 +43,7 @@ ui_*.h
 # Editors and OS
 .vscode/
 .idea/
+.qtcreator/
 .cache/
 compile_commands.json
 *.swp

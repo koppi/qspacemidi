@@ -12,7 +12,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(qspacemidi
-    VERSION 1.0.3
+    VERSION 1.0.4
     DESCRIPTION "Map a 3Dconnexion SpaceNavigator to MIDI CC messages"
     HOMEPAGE_URL "https://github.com/koppi/qspacemidi"
     LANGUAGES CXX)
@@ -33,7 +33,7 @@ option(QSPACEMIDI_WERROR "Treat warnings as errors" OFF)
 # Qt 6
 # ---------------------------------------------------------------------------
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets Network)
 qt_standard_project_setup()
 
 # ---------------------------------------------------------------------------
@@ -89,6 +89,8 @@ set(QSPACEMIDI_SOURCES
     src/mapping.h
     src/settings.cpp
     src/settings.h
+    src/singleinstance.cpp
+    src/singleinstance.h
     src/widgets/axisrow.cpp
     src/widgets/axisrow.h
     src/widgets/knob.cpp
@@ -123,6 +125,7 @@ target_link_libraries(qspacemidi PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    Qt6::Network
     libremidi::libremidi)
 
 target_compile_definitions(qspacemidi PRIVATE

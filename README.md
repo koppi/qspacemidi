@@ -27,6 +27,8 @@ and a sensitivity knob.
   it connects to an existing port such as a [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html)
   port.
 - System tray icon: close the window and the mapping keeps running.
+- **Single instance**: launching QSpaceMIDI again just brings the running
+  window to the front instead of starting a second copy.
 - **Start at login**: one checkbox writes the platform's autostart entry, so
   the mapping is live right after you log in.
 - Translated into Danish, English, Finnish, French, German, Italian, Japanese,
@@ -169,6 +171,19 @@ qspacemidi [options]
 ```
 
 `QSPACEMIDI_LANG=<code>` overrides the interface language for one run.
+
+## Single instance
+
+Only one QSpaceMIDI runs per user. Starting it again - from a launcher, the
+command line or by clicking the icon while it sits in the tray - hands the
+running instance a request to show its window and then exits. A launch with
+`--minimized` defers in the same way but leaves the window as it was, so the
+autostart entry never disturbs a window you opened yourself.
+
+The instances find each other through a `QLocalServer` whose name is derived
+from your home directory, so two users, or two desktop sessions with separate
+homes, each keep their own instance. A socket left behind by a crash is
+cleared automatically on the next start.
 
 ## Autostart
 

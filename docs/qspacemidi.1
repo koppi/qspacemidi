@@ -1,5 +1,5 @@
 '\" t
-.TH QSPACEMIDI 1 "August 2026" "qspacemidi 1.0.3" "User Commands"
+.TH QSPACEMIDI 1 "September 2026" "qspacemidi 1.0.4" "User Commands"
 .SH NAME
 qspacemidi \- map a 3Dconnexion SpaceNavigator to MIDI CC messages
 .SH SYNOPSIS
@@ -99,6 +99,14 @@ to insist on one of the two, or leave it at
 .I auto
 to use the monochrome icon wherever the icon theme provides it.
 .SH NOTES
+Only one instance runs per user.  Starting
+.B qspacemidi
+again while it is already running \- from the tray, a launcher or the command
+line \- brings the running window to the front instead of starting a second
+copy; with
+.BR \-\-minimized ,
+the second launch simply exits and leaves the running instance as it was.
+.PP
 Right click a row in the window to mute an axis or to reset its sensitivity;
 the
 .B \(+-

@@ -1,3 +1,19 @@
+qspacemidi (1.0.4) unstable; urgency=medium
+
+  * Run only one instance per user.  Starting QSpaceMIDI again - from a
+    launcher, the command line or by clicking the icon while it sits in the
+    tray - now hands the running instance a request to show its window and
+    then exits, instead of starting a second copy that fights over the same
+    3D mouse and MIDI port.
+  * A second launch with --minimized defers in the same way but leaves the
+    window as it was, so a duplicated autostart entry never disturbs a window
+    that was opened by hand.
+  * The instances find each other through a per-user QLocalServer; a socket
+    left behind by a crash is cleared on the next start, and two simultaneous
+    cold starts are serialised so that exactly one wins.
+
+ -- Jakob Flierl <jakob.flierl@gmail.com>  Wed, 02 Sep 2026 18:25:00 +0200
+
 qspacemidi (1.0.3) unstable; urgency=medium
 
   * Ship a monochrome tray icon and hand the desktop its name rather than a
