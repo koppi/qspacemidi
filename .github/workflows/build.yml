@@ -76,11 +76,21 @@ jobs:
 
   # ---------------------------------------------------------------------
   # macOS: signed-less .app bundle deployed with macdeployqt, shipped as a
-  # compressed disk image.
+  # compressed disk image.  Built once per architecture on a native runner -
+  # Apple Silicon on macos-14, Intel on macos-13 - so each disk image carries
+  # a matching single-architecture binary.
   # ---------------------------------------------------------------------
   macos:
-    name: macOS
-    runs-on: macos-14
+    name: macOS (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-14
+          - arch: x86_64
+            runner: macos-13
     steps:
       - uses: actions/checkout@v4
 
@@ -91,7 +101,9 @@ jobs:
           cache: true
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+            -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }}
 
       - name: Build
         run: cmake --build build --parallel
@@ -103,12 +115,12 @@ jobs:
           cp -R build/qspacemidi.app "dist/dmg/QSpaceMIDI.app"
           ln -s /Applications dist/dmg/Applications
           hdiutil create -volname QSpaceMIDI -srcfolder dist/dmg \
-            -ov -format UDZO dist/QSpaceMIDI-macOS.dmg
+            -ov -format UDZO "dist/QSpaceMIDI-macOS-${{ matrix.arch }}.dmg"
           rm -rf dist/dmg
 
       - uses: actions/upload-artifact@v4
         with:
-          name: qspacemidi-macos
+          name: qspacemidi-macos-${{ matrix.arch }}
           path: dist/*
           if-no-files-found: error
 

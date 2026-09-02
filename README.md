@@ -75,7 +75,8 @@ Every tagged release carries binaries for all three platforms:
 | -------- | -------- |
 | Debian 12 / 13 / 14, Ubuntu 24.04 / 26.04 (amd64 and arm64) | `qspacemidi_<version>~<codename>_<arch>.deb` |
 | Any other Linux | `QSpaceMIDI-x86_64.AppImage` |
-| macOS | `QSpaceMIDI-macOS.dmg` |
+| macOS, Apple Silicon | `QSpaceMIDI-macOS-arm64.dmg` |
+| macOS, Intel | `QSpaceMIDI-macOS-x86_64.dmg` |
 | Windows | `QSpaceMIDI-windows-x64.zip` |
 
 Older releases such as Ubuntu 22.04 and Debian 11 are not packaged: they ship
