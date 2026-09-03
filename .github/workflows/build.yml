@@ -108,6 +108,24 @@ jobs:
       - name: Deploy and package
         run: |
           macdeployqt build/qspacemidi.app -always-overwrite
+
+          # macdeployqt copies Qt's libraries whole, and Qt ships them
+          # universal.  The cross compiled x86_64 image would otherwise carry
+          # an arm64 slice it never runs, so thin every bundled Mach-O down
+          # to this build's architecture and re-sign the bundle ad-hoc so the
+          # slice hashes match again.  (The arm64 image is built natively and
+          # left alone.)
+          if [ "${{ matrix.arch }}" = x86_64 ]; then
+            find build/qspacemidi.app -type f | while read -r macho; do
+              file -b "$macho" | grep -q "Mach-O universal binary" || continue
+              lipo "$macho" -thin x86_64 -output "$macho.thin"
+              # Overwrite in place so the file keeps its mode and inode.
+              cat "$macho.thin" > "$macho"
+              rm "$macho.thin"
+            done
+            codesign --force --deep --sign - build/qspacemidi.app
+          fi
+
           mkdir -p dist/dmg
           cp -R build/qspacemidi.app "dist/dmg/QSpaceMIDI.app"
           ln -s /Applications dist/dmg/Applications
