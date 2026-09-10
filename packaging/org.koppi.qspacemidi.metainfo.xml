@@ -66,6 +66,16 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.0.5" date="2026-09-11">
+      <description>
+        <p>
+          Builds the macOS disk image in two passes, the way create-dmg does,
+          so its /Applications symlink is stored as a symlink and the image
+          mounts on every macOS version instead of failing with "no mountable
+          file systems" on some.
+        </p>
+      </description>
+    </release>
     <release version="1.0.4" date="2026-09-02">
       <description>
         <p>

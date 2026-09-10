@@ -1,3 +1,12 @@
+qspacemidi (1.0.5) unstable; urgency=medium
+
+  * Fix the macOS disk image: it is built in two passes now, the way
+    create-dmg does, so the /Applications symlink is stored as a symlink and
+    the image mounts on every macOS version instead of failing with "no
+    mountable file systems" ("keine aktivierbaren Dateisysteme") on some.
+
+ -- Jakob Flierl <jakob.flierl@gmail.com>  Fri, 11 Sep 2026 01:10:00 +0200
+
 qspacemidi (1.0.4) unstable; urgency=medium
 
   * Run only one instance per user.  Starting QSpaceMIDI again - from a
