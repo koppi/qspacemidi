@@ -126,12 +126,48 @@ jobs:
             codesign --force --deep --sign - build/qspacemidi.app
           fi
 
-          mkdir -p dist/dmg
-          cp -R build/qspacemidi.app "dist/dmg/QSpaceMIDI.app"
-          ln -s /Applications dist/dmg/Applications
-          hdiutil create -volname QSpaceMIDI -srcfolder dist/dmg \
-            -ov -format UDZO "dist/QSpaceMIDI-macOS-${{ matrix.arch }}.dmg"
-          rm -rf dist/dmg
+          # A single "create -srcfolder ... -format UDZO" step can come out
+          # unmountable ("no mountable file systems" / "keine aktivierbaren
+          # Dateisysteme"): on current macOS the image defaults to APFS, and
+          # the /Applications symlink in the source folder may be followed
+          # while copying, pulling in the whole host /Applications.  Build in
+          # two passes instead, the way create-dmg does: an HFS+ scratch
+          # image is populated, the symlink is added inside the mounted
+          # volume so it is stored as a symlink, then the fixed-up image is
+          # compressed to the read-only UDZO users download.
+          STAGING="staging"
+          RW_IMAGE="QSpaceMIDI.rw.dmg"
+          DMG_IMAGE="QSpaceMIDI-macOS-${{ matrix.arch }}.dmg"
+
+          rm -rf "$STAGING" "$RW_IMAGE" "$DMG_IMAGE"
+          mkdir -p "$STAGING"
+          cp -R build/qspacemidi.app "$STAGING/QSpaceMIDI.app"
+
+          hdiutil create -fs HFS+ -volname QSpaceMIDI -srcfolder "$STAGING" \
+            -format UDRW -ov -nospotlight -anyowners "$RW_IMAGE"
+
+          MOUNT_POINT="$STAGING/mnt"
+          mkdir -p "$MOUNT_POINT"
+          DEVICE=$(hdiutil attach -readwrite -noverify \
+            -mountpoint "$MOUNT_POINT" "$RW_IMAGE" |
+            grep '^/dev/' | sed 1q | awk '{print $1}')
+          ln -s /Applications "$MOUNT_POINT/Applications"
+          hdiutil detach "$DEVICE" || hdiutil detach "$MOUNT_POINT"
+
+          hdiutil convert "$RW_IMAGE" -format UDZO -ov \
+            -imagekey zlib-level=9 -o "$DMG_IMAGE"
+          rm -f "$RW_IMAGE"
+
+          # Mount the finished image once to prove it is usable before it is
+          # uploaded; a broken artifact is worse than a failed build.
+          mkdir -p dist "$STAGING/verify"
+          VERIFY_DEVICE=$(hdiutil attach -noverify -noautoopen \
+            -mountpoint "$STAGING/verify" "$DMG_IMAGE" |
+            grep '^/dev/' | sed 1q | awk '{print $1}')
+          test -d "$STAGING/verify/QSpaceMIDI.app"
+          test -L "$STAGING/verify/Applications"
+          hdiutil detach "$VERIFY_DEVICE" || hdiutil detach "$STAGING/verify"
+          mv "$DMG_IMAGE" dist/
 
       - uses: actions/upload-artifact@v4
         with:
