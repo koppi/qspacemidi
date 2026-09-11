@@ -66,6 +66,15 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="1.0.6" date="2026-09-11">
+      <description>
+        <p>
+          Supports macOS Big Sur (11) again: the macOS disk images are now
+          built with Qt 6.7 and an 11.0 deployment target, so the x86_64 image
+          runs on Big Sur instead of requiring macOS 12.
+        </p>
+      </description>
+    </release>
     <release version="1.0.5" date="2026-09-11">
       <description>
         <p>

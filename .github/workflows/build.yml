@@ -79,7 +79,9 @@ jobs:
   # compressed disk image, one per architecture.  Qt's macOS libraries are
   # universal, so both slices are built on the Apple Silicon runner - the
   # x86_64 one by cross compiling - rather than waiting on the scarce Intel
-  # runners.
+  # runners.  Qt 6.7 keeps macOS 11 (Big Sur) as its minimum deployment
+  # target, unlike Qt 6.8 which needs macOS 12, so the deployment target is
+  # pinned to 11.0 and the x86_64 image also runs on Big Sur.
   # ---------------------------------------------------------------------
   macos:
     name: macOS (${{ matrix.arch }})
@@ -94,13 +96,14 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: "6.8.*"
+          version: "6.7.*"
           cache: true
 
       - name: Configure
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
-            -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }}
+            -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
 
       - name: Build
         run: cmake --build build --parallel

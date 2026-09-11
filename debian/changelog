@@ -1,3 +1,11 @@
+qspacemidi (1.0.6) unstable; urgency=medium
+
+  * Support macOS Big Sur (11) again: the macOS disk images are now built with
+    Qt 6.7 and an 11.0 deployment target instead of Qt 6.8's macOS 12 baseline,
+    so the x86_64 image runs on Big Sur as well.
+
+ -- Jakob Flierl <jakob.flierl@gmail.com>  Fri, 11 Sep 2026 02:00:00 +0200
+
 qspacemidi (1.0.5) unstable; urgency=medium
 
   * Fix the macOS disk image: it is built in two passes now, the way
