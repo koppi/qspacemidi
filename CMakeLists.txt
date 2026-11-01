@@ -34,7 +34,6 @@ option(QSPACEMIDI_WERROR "Treat warnings as errors" OFF)
 # ---------------------------------------------------------------------------
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets Network)
-qt_standard_project_setup()
 
 # ---------------------------------------------------------------------------
 # libremidi
@@ -70,6 +69,11 @@ FetchContent_Declare(
     CMAKE_ARGS -DLIBREMIDI_USE_WinRT=OFF -DLIBREMIDI_NO_WINUWP=ON
 )
 FetchContent_MakeAvailable(libremidi)
+
+# Enable Qt's code generators only after fetching libremidi.  Otherwise the
+# dependency inherits AUTOMOC and moc scans its headers, including an
+# intentionally empty ALSA helper header that only triggers a warning.
+qt_standard_project_setup()
 
 # ---------------------------------------------------------------------------
 # Application
