@@ -1,3 +1,12 @@
+qspacemidi (1.0.7) unstable; urgency=medium
+
+  * Fix the Linux AppImage build: recent appimagetool releases require a
+    .DirIcon and no longer generate it from the scalable SVG, so the 256x256
+    PNG is placed at the AppDir root.
+  * Build the macOS disk images on the macOS 15 runner.
+
+ -- Jakob Flierl <jakob.flierl@gmail.com>  Sun, 01 Nov 2026 11:39:49 +0100
+
 qspacemidi (1.0.6) unstable; urgency=medium
 
   * Support macOS Big Sur (11) again: the macOS disk images are now built with

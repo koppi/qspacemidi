@@ -12,7 +12,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(qspacemidi
-    VERSION 1.0.6
+    VERSION 1.0.7
     DESCRIPTION "Map a 3Dconnexion SpaceNavigator to MIDI CC messages"
     HOMEPAGE_URL "https://github.com/koppi/qspacemidi"
     LANGUAGES CXX)

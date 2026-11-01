@@ -54,6 +54,10 @@ jobs:
         run: |
           export APPIMAGE_EXTRACT_AND_RUN=1
           DESTDIR="$PWD/AppDir" cmake --install build --prefix /usr
+          # appimagetool creates .DirIcon from a PNG at the AppDir root named
+          # after Icon= in the desktop file.  CMake installs the scalable SVG
+          # only, so make sure the 256x256 raster icon is there as well.
+          cp resources/icons/qspacemidi.png AppDir/qspacemidi.png
           curl -fsSLO https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           curl -fsSLO https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
           chmod +x linuxdeploy-*.AppImage
