@@ -2,6 +2,8 @@ qspacemidi (1.0.8) unstable; urgency=medium
 
   * Add Debian package builds for Ubuntu 26.10 and 27.04.
 
+ -- Jakob Flierl <jakob.flierl@gmail.com>  Mon, 02 Nov 2026 15:30:00 +0100
+
 qspacemidi (1.0.7) unstable; urgency=medium
 
   * Fix the Linux AppImage build: recent appimagetool releases require a

@@ -9,7 +9,7 @@ name: debian packages
 # jammy has CMake 3.22 and GCC 11, bullseye has no Qt 6 at all.  Use the
 # AppImage from the release page there.
 
-# Fourteen QEMU builds are expensive, so branch pushes do not trigger them: the
+# Ten QEMU builds are expensive, so branch pushes do not trigger them: the
 # matrix runs for tags, for pull requests that touch the build, and on
 # demand.  A paths filter must not be combined with the tag trigger here -
 # a tag push has no changed files to match against, and the workflow would
@@ -81,22 +81,6 @@ jobs:
           - distro: ubuntu
             codename: resolute
             version: "26.04"
-            arch: arm64
-          - distro: ubuntu
-            codename: silent
-            version: "26.10"
-            arch: amd64
-          - distro: ubuntu
-            codename: silent
-            version: "26.10"
-            arch: arm64
-          - distro: ubuntu
-            codename: tame
-            version: "27.04"
-            arch: amd64
-          - distro: ubuntu
-            codename: tame
-            version: "27.04"
             arch: arm64
     steps:
       - name: Checkout
